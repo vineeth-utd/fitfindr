@@ -132,7 +132,7 @@ For each tool, describe the specific failure mode you're handling and what the a
 
 ## A Complete Interaction (Step by Step)
 
-Write out what a full user interaction looks like from start to finish — tool call by tool call. Use a specific example query.
+FitFindr helps users discover secondhand clothing items that match their style, size, and budget, then shows how those items can be incorporated into their existing wardrobe. When a user submits a clothing request, the agent first calls `search_listings()` to find matching listings, passes the selected item to `suggest_outfit()` to generate a styling recommendation, and then sends that recommendation to `create_fit_card()` to produce a short, shareable outfit caption. If a tool cannot complete its task, such as when no listings are found, the agent provides a clear explanation and actionable next steps instead of continuing with incomplete data.
 
 **Example user query:** "I'm looking for a vintage graphic tee under $30. I mostly wear baggy jeans and chunky sneakers. What's out there and how would I style it?"
 
