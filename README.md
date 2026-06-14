@@ -1,4 +1,4 @@
-# FitFindr — Starter Kit
+# FitFindr
 
 This starter kit contains everything you need to begin Project 2.
 
