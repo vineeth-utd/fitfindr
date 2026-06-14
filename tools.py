@@ -59,8 +59,6 @@ def search_listings(
     Each listing dict has the following fields:
         id, title, description, category, style_tags (list), size,
         condition, price (float), colors (list), brand, platform
-
-    Before writing code, fill in the Tool 1 section of planning.md.
     """
     listings = load_listings()
 
@@ -105,20 +103,71 @@ def suggest_outfit(new_item: dict, wardrobe: dict) -> str:
         A non-empty string with outfit suggestions.
         If the wardrobe is empty, offer general styling advice for the item
         rather than raising an exception or returning an empty string.
-
-    TODO:
-        1. Check whether wardrobe['items'] is empty.
-        2. If empty: call the LLM with a prompt for general styling ideas
-           (what kinds of items pair well, what vibe it suits, etc.).
-        3. If not empty: format the wardrobe items into a prompt and ask
-           the LLM to suggest specific outfit combinations using the new item
-           and named pieces from the wardrobe.
-        4. Return the LLM's response as a string.
-
-    Before writing code, fill in the Tool 2 section of planning.md.
     """
-    # Replace this with your implementation
-    return ""
+    items = wardrobe.get("items", [])
+
+    colors = ", ".join(new_item.get("colors", []))
+    tags = ", ".join(new_item.get("style_tags", []))
+    brand = new_item.get("brand") or "N/A"
+    item_block = (
+        f"Item: {new_item.get('title', '')}\n"
+        f"Description: {new_item.get('description', '')}\n"
+        f"Category: {new_item.get('category', '')}\n"
+        f"Style tags: {tags}\n"
+        f"Colors: {colors}\n"
+        f"Size: {new_item.get('size', '')}\n"
+        f"Condition: {new_item.get('condition', '')}\n"
+        f"Price: ${new_item.get('price', 0):.2f}\n"
+        f"Brand: {brand}\n"
+        f"Platform: {new_item.get('platform', '')}"
+    )
+
+    system_message = (
+        "You are a helpful fashion stylist for a thrift-shopping assistant. "
+        "Give practical, specific, and realistic styling advice. "
+        "Use the item's style, colors, and vibe when making recommendations. "
+        "Output plain text only — no markdown, no bullet symbols, no headers. "
+        "Do not invent wardrobe items that were not provided."
+    )
+
+    if not items:
+        prompt = (
+            f"I just thrifted this item:\n{item_block}\n\n"
+            "I don't have other clothes yet. Suggest 1-2 outfit ideas describing what types of "
+            "clothes, shoes, or accessories would pair well with this item and what vibe or "
+            "occasion each outfit suits. Do not mention specific pieces I own — I have none."
+        )
+    else:
+        wardrobe_lines = []
+        for i, piece in enumerate(items, 1):
+            parts = []
+            for key in ["name", "category", "colors", "style_tags", "notes"]:
+                if key in piece:
+                    val = piece[key]
+                    if isinstance(val, list):
+                        val = ", ".join(val)
+                    parts.append(str(val))
+            line = " | ".join(parts) if parts else str(piece)
+            wardrobe_lines.append(f"{i}. {line}")
+        wardrobe_list = "\n".join(wardrobe_lines)
+
+        prompt = (
+            f"I just thrifted this item:\n{item_block}\n\n"
+            f"Here are the clothes I already own:\n{wardrobe_list}\n\n"
+            "Suggest 1-2 outfits using my new item and specific pieces from my wardrobe. "
+            "Reference each wardrobe piece by name. Do not invent items I did not list."
+        )
+
+    client = _get_groq_client()
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.7,
+    )
+    return response.choices[0].message.content
 
 
 # ── Tool 3: create_fit_card ───────────────────────────────────────────────────
