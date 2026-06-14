@@ -190,14 +190,50 @@ def create_fit_card(outfit: str, new_item: dict) -> str:
     - Mention the item name, price, and platform naturally (once each)
     - Capture the outfit vibe in specific terms
     - Sound different each time for different inputs (use higher LLM temperature)
-
-    TODO:
-        1. Guard against an empty or whitespace-only outfit string.
-        2. Build a prompt that gives the LLM the item details and the outfit,
-           and asks for a caption matching the style guidelines above.
-        3. Call the LLM and return the response.
-
-    Before writing code, fill in the Tool 3 section of planning.md.
     """
-    # Replace this with your implementation
-    return ""
+    if not outfit or not outfit.strip():
+        return "Unable to create a fit card because no outfit suggestion was generated."
+
+    colors = ", ".join(new_item.get("colors", []))
+    tags = ", ".join(new_item.get("style_tags", []))
+    brand = new_item.get("brand") or "N/A"
+    item_block = (
+        f"Item: {new_item.get('title', '')}\n"
+        f"Description: {new_item.get('description', '')}\n"
+        f"Category: {new_item.get('category', '')}\n"
+        f"Style tags: {tags}\n"
+        f"Colors: {colors}\n"
+        f"Size: {new_item.get('size', '')}\n"
+        f"Condition: {new_item.get('condition', '')}\n"
+        f"Price: ${new_item.get('price', 0):.2f}\n"
+        f"Brand: {brand}\n"
+        f"Platform: {new_item.get('platform', '')}"
+    )
+
+    system_message = (
+        "You are a fashion stylist and social media creator writing Instagram and TikTok "
+        "outfit captions for a thrift-shopping app. "
+        "Write captions that feel casual, authentic, and personal — like a real OOTD post, "
+        "not a product listing or advertisement. "
+        "Output plain text only. No markdown, no hashtags, no emojis, no bullet points. "
+        "Use natural, shareable wording that captures the outfit vibe in specific terms."
+    )
+
+    prompt = (
+        f"Here is the thrifted item I found:\n{item_block}\n\n"
+        f"Here is the outfit suggestion I'm going for:\n{outfit}\n\n"
+        "Write a 2-4 sentence caption for this outfit. Mention the item name exactly once, "
+        "the price exactly once, and the platform exactly once — naturally, not as a product "
+        "listing. Capture the outfit vibe in specific terms. Keep it casual and personal."
+    )
+
+    client = _get_groq_client()
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": system_message},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=1.0,
+    )
+    return response.choices[0].message.content
