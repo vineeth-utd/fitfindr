@@ -93,7 +93,7 @@ None currently planned. The initial implementation will focus on the three requi
    - Select the first result as the best match.
    - Store it in `session["selected_item"]`.
 5. Call `suggest_outfit(session["selected_item"], wardrobe)`.
-6. If `suggest_outfit()` returns an empty string:
+6. If `suggest_outfit()` returns an empty string or cannot generate a usable outfit suggestion:
    - Store an error message in `session["error"]`.
    - Stop the workflow without calling `create_fit_card()`.
 7. If a valid outfit suggestion is returned:
@@ -110,7 +110,7 @@ None currently planned. The initial implementation will focus on the three requi
 
 The agent uses a single session dictionary as the source of truth for one user interaction. The session is created at the start of `run_agent()` and stores the original query, the parsed search inputs, the raw search results, the selected listing, the user's wardrobe, the outfit suggestion, the final fit card, and any error message. This lets each tool receive the output of the previous step without the user repeating information.
 
-The session fields are updated in order as the workflow runs. First, `session["parsed"]` stores the extracted `description`, `size`, and `max_price`. Next, `session["search_results"]` stores the list returned by `search_listings()`, and `session["selected_item"]` stores the top ranked listing chosen from that list. Then `session["outfit_suggestion"]` stores the string returned by `suggest_outfit()`, and `session["fit_card"]` stores the final caption returned by `create_fit_card()`. If any step fails, `session["error"]` is set and the agent returns early, which prevents later tools from running with missing input.
+The session fields are updated in order as the workflow runs. First, `session["parsed"]` stores the extracted `description`, `size`, and `max_price`. Next, `session["search_results"]` stores the list returned by `search_listings()`, and `session["selected_item"]` stores the top-ranked listing chosen from that list. Then `session["outfit_suggestion"]` stores the string returned by `suggest_outfit()`, and `session["fit_card"]` stores the final caption returned by `create_fit_card()`. If any step fails, `session["error"]` is set and the agent returns early, which prevents later tools from running with missing input.
 
 ---
 
@@ -125,17 +125,6 @@ For each tool, the agent handles failure in a specific way so the workflow does 
 | `create_fit_card` | The outfit input is empty or missing | Return a descriptive error string such as "Unable to create a fit card because no outfit suggestion was generated." The agent shows this message to the user instead of crashing. |
 
 ---
-
-## Architecture
-
-<!-- Draw a diagram of your agent showing how the components connect:
-     User input → Planning Loop → Tools (search_listings, suggest_outfit, create_fit_card)
-                                                                          ↕
-                                                                   State / Session
-     Show what triggers each tool, how state flows between them, and where error paths branch off.
-     ASCII art, a Mermaid diagram (https://mermaid.js.org/syntax/flowchart.html), or an embedded
-     sketch are all fine. You'll share this diagram with an AI tool when asking it to implement
-     the planning loop and each individual tool. -->
 
 ## Architecture
 
@@ -174,20 +163,49 @@ flowchart TD
 
 ## AI Tool Plan
 
-<!-- For each part of the implementation below, describe:
-     - Which AI tool you plan to use (Claude, Copilot, ChatGPT, etc.)
-     - What you'll give it as input (which sections of this planning.md, your agent diagram)
-     - What you expect it to produce
-     - How you'll verify the output matches your spec before moving on
+### Milestone 3 — Individual tool implementations
 
-     "I'll use AI to help me code" is not a plan.
-     "I'll give Claude my Tool 1 spec (inputs, return value, failure mode) and ask it to implement
-     search_listings() using load_listings() from the data loader — then test it against 3 queries
-     before trusting it" is a plan. -->
+**AI Tool:** Claude Code (Plan Mode)
 
-**Milestone 3 — Individual tool implementations:**
+**Input provided to Claude:**
+- The corresponding tool specification from the **Tools** section of this document
+- The **Error Handling** section for that tool
+- `tools.py`
+- `utils/data_loader.py`
 
-**Milestone 4 — Planning loop and state management:**
+**Expected output:**
+- An implementation of the requested tool in `tools.py`
+- Logic that matches the documented inputs, outputs, and failure behavior
+- Use of the provided data loader functions instead of reimplementing data access
+
+**Verification process:**
+- Confirm that the function signature matches the specification
+- Confirm that the return value matches the documented format
+- Confirm that the failure mode behaves as described in the Error Handling section
+- Run pytest tests and manually test the function with both valid and invalid inputs before moving to the next tool
+
+### Milestone 4 — Planning loop and state management
+
+**AI Tool:** Claude Code (Plan Mode)
+
+**Input provided to Claude:**
+- The **Planning Loop** section
+- The **State Management** section
+- The **Architecture** diagram
+- `agent.py`
+
+**Expected output:**
+- An implementation of `run_agent()` that follows the documented workflow
+- Correct use of the session dictionary for passing data between tools
+- Early termination when a required tool fails or returns no usable result
+
+**Verification process:**
+- Confirm that the implementation follows the documented step order
+- Confirm that `search_listings()` is not followed by `suggest_outfit()` when no results are found
+- Confirm that `session["selected_item"]` is passed into `suggest_outfit()`
+- Confirm that `session["outfit_suggestion"]` is passed into `create_fit_card()`
+- Run the happy-path and failure-path examples provided in `agent.py`
+- Compare the final behavior against the Architecture diagram and Planning Loop specification before accepting the implementation
 
 ---
 
@@ -198,13 +216,67 @@ FitFindr helps users discover secondhand clothing items that match their style, 
 **Example user query:** "I'm looking for a vintage graphic tee under $30. I mostly wear baggy jeans and chunky sneakers. What's out there and how would I style it?"
 
 **Step 1:**
-<!-- What does the agent do first? Which tool is called? With what input? -->
+
+The agent extracts the search criteria from the user query and calls:
+
+`search_listings(description="vintage graphic tee", size=None, max_price=30.0)`
+
+The tool searches the listings dataset and returns a list of matching listing dictionaries sorted by relevance. The agent reviews the returned results and selects the first result as the best match for the next step. Each listing contains the fields:
+
+`id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`.
+
+Example top result:
+
+- Graphic Tee — 2003 Tour Bootleg Style
+- Price: $24
+- Size: L
+- Style tags: graphic tee, vintage, grunge, streetwear, band tee
+- Platform: Depop
+
+The agent stores the returned list in `session["search_results"]` and selects the first result as `session["selected_item"]`.
 
 **Step 2:**
-<!-- What happens next? What was returned from step 1? What tool is called now? -->
+
+The agent calls:
+
+`suggest_outfit(session["selected_item"], wardrobe)`
+
+using `session["selected_item"]` and the user's wardrobe.
+
+The tool returns an outfit recommendation such as:
+
+```text
+"Pair the graphic tee with your baggy straight-leg jeans and chunky white sneakers for a relaxed vintage streetwear look. Layer the vintage black denim jacket on top and finish with the black crossbody bag."
+```
+
+The agent stores this result in `session["outfit_suggestion"]`.
 
 **Step 3:**
-<!-- Continue until the full interaction is complete -->
+
+The agent calls:
+
+`create_fit_card(session["outfit_suggestion"], session["selected_item"])`
+
+using the outfit recommendation generated in Step 2 and the selected listing from Step 1.
+
+The tool returns a shareable fit card such as:
+
+```text
+"Found this vintage-style graphic tee for $24 and it fits perfectly with my baggy denim rotation ✨ paired it with chunky sneakers and a black denim jacket for an easy everyday thrifted look."
+```
+
+The agent stores this result in `session["fit_card"]`.
 
 **Final output to user:**
-<!-- What does the user actually see at the end? -->
+
+**Selected item:**
+
+* Graphic Tee — 2003 Tour Bootleg Style ($24, Depop)
+
+**Outfit suggestion:**
+
+* Pair the graphic tee with baggy straight-leg jeans, chunky white sneakers, a vintage black denim jacket, and a black crossbody bag.
+
+**Fit card:**
+
+* "Found this vintage-style graphic tee for $24 and it fits perfectly with my baggy denim rotation ✨ paired it with chunky sneakers and a black denim jacket for an easy everyday thrifted look."
