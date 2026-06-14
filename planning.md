@@ -107,7 +107,10 @@ None currently planned. The initial implementation will focus on the three requi
 ## State Management
 
 **How does information from one tool get passed to the next?**
-<!-- Describe how your agent stores and accesses state within a session. What data is tracked? How is it passed between tool calls? -->
+
+The agent uses a single session dictionary as the source of truth for one user interaction. The session is created at the start of `run_agent()` and stores the original query, the parsed search inputs, the raw search results, the selected listing, the user's wardrobe, the outfit suggestion, the final fit card, and any error message. This lets each tool receive the output of the previous step without the user repeating information.
+
+The session fields are updated in order as the workflow runs. First, `session["parsed"]` stores the extracted `description`, `size`, and `max_price`. Next, `session["search_results"]` stores the list returned by `search_listings()`, and `session["selected_item"]` stores the top ranked listing chosen from that list. Then `session["outfit_suggestion"]` stores the string returned by `suggest_outfit()`, and `session["fit_card"]` stores the final caption returned by `create_fit_card()`. If any step fails, `session["error"]` is set and the agent returns early, which prevents later tools from running with missing input.
 
 ---
 
