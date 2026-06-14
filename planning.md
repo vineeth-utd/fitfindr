@@ -116,13 +116,13 @@ The session fields are updated in order as the workflow runs. First, `session["p
 
 ## Error Handling
 
-For each tool, describe the specific failure mode you're handling and what the agent does in response.
+For each tool, the agent handles failure in a specific way so the workflow does not crash or continue with missing data.
 
 | Tool | Failure mode | Agent response |
 |------|-------------|----------------|
-| search_listings | No results match the query | |
-| suggest_outfit | Wardrobe is empty | |
-| create_fit_card | Outfit input is missing or incomplete | |
+| `search_listings` | No listings match the user query | Set `session["error"]` to a clear message such as "No matching listings were found for that search. Try broadening the size filter or increasing your budget." Stop the workflow immediately and do not call `suggest_outfit()` or `create_fit_card()`. |
+| `suggest_outfit` | The wardrobe is empty or too limited to build a full outfit | Return a fallback styling suggestion based on the selected item instead of crashing. If the tool still cannot produce a usable suggestion, set `session["error"]` and stop before calling `create_fit_card()`. |
+| `create_fit_card` | The outfit input is empty or missing | Return a descriptive error string such as "Unable to create a fit card because no outfit suggestion was generated." The agent shows this message to the user instead of crashing. |
 
 ---
 
