@@ -60,17 +60,34 @@ def search_listings(
         id, title, description, category, style_tags (list), size,
         condition, price (float), colors (list), brand, platform
 
-    TODO:
-        1. Load all listings with load_listings().
-        2. Filter by max_price and size (if provided).
-        3. Score each remaining listing by keyword overlap with `description`.
-        4. Drop any listings with a score of 0 (no relevant matches).
-        5. Sort by score, highest first, and return the listing dicts.
-
     Before writing code, fill in the Tool 1 section of planning.md.
     """
-    # Replace this with your implementation
-    return []
+    listings = load_listings()
+
+    if max_price is not None:
+        listings = [l for l in listings if l["price"] <= max_price]
+
+    if size is not None:
+        listings = [l for l in listings if size.lower() in l["size"].lower()]
+
+    keywords = description.lower().split()
+
+    def score_listing(listing):
+        parts = [
+            listing["title"],
+            listing["description"],
+            listing["category"],
+            " ".join(listing["style_tags"]),
+            " ".join(listing["colors"]),
+        ]
+        if listing["brand"]:
+            parts.append(listing["brand"])
+        combined = " ".join(parts).lower()
+        return sum(1 for kw in keywords if kw in combined)
+
+    scored = [(s, l) for l in listings for s in [score_listing(l)] if s > 0]
+    scored.sort(key=lambda x: x[0], reverse=True)
+    return [l for _, l in scored]
 
 
 # ── Tool 2: suggest_outfit ────────────────────────────────────────────────────
