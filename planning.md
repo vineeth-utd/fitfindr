@@ -137,6 +137,39 @@ For each tool, the agent handles failure in a specific way so the workflow does 
      sketch are all fine. You'll share this diagram with an AI tool when asking it to implement
      the planning loop and each individual tool. -->
 
+## Architecture
+
+```mermaid
+flowchart TD
+    U[User query] --> P[Planning loop]
+    P --> Q[Parse description, size, and max_price]
+
+    S[(Session state)]
+    P <--> S
+    Q <--> S
+
+    Q --> T1["search_listings(description, size, max_price)"]
+    T1 <--> S
+
+    T1 -->|No matches| E1[Set session.error and stop]
+    T1 -->|Matches found| R[Store session.search_results]
+    R --> I[Select top result as session.selected_item]
+
+    I --> T2["suggest_outfit(session.selected_item, wardrobe)"]
+    T2 <--> S
+
+    T2 -->|Empty outfit| E2[Set session.error and stop]
+    T2 -->|Valid outfit| O1[Store session.outfit_suggestion]
+
+    O1 --> T3["create_fit_card(session.outfit_suggestion, session.selected_item)"]
+    T3 <--> S
+
+    T3 -->|Empty input| E3[Set session.error and stop]
+    T3 -->|Success| F[Store session.fit_card]
+
+    F --> U2[Return session to UI]
+```
+
 ---
 
 ## AI Tool Plan
