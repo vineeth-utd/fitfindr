@@ -82,7 +82,25 @@ None currently planned. The initial implementation will focus on the three requi
 ## Planning Loop
 
 **How does your agent decide which tool to call next?**
-<!-- Describe the logic your planning loop uses. What does it look at? What conditions change its behavior? How does it know when it's done? -->
+
+1. Read the user query and determine the description, size, and maximum budget values needed for `search_listings()`.
+2. Call `search_listings(description, size, max_price)`.
+3. If `search_listings()` returns an empty list:
+   - Store an error message in `session["error"]`.
+   - Tell the user that no matching listings were found and suggest adjusting the search criteria.
+   - Stop the workflow without calling any additional tools.
+4. If listings are found:
+   - Select the first result as the best match.
+   - Store it in `session["selected_item"]`.
+5. Call `suggest_outfit(session["selected_item"], wardrobe)`.
+6. If `suggest_outfit()` returns an empty string:
+   - Store an error message in `session["error"]`.
+   - Stop the workflow without calling `create_fit_card()`.
+7. If a valid outfit suggestion is returned:
+   - Store it in `session["outfit_suggestion"]`.
+8. Call `create_fit_card(session["outfit_suggestion"], session["selected_item"])`.
+9. Store the generated caption in `session["fit_card"]`.
+10. Return the completed session to the user interface.
 
 ---
 
