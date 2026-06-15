@@ -1,6 +1,8 @@
 # FitFindr
 
-This starter kit contains everything you need to begin Project 2.
+FitFindr is a multi-tool AI agent that helps users discover secondhand clothing items and understand how they can be styled with an existing wardrobe. The agent searches a mock thrift listings dataset, generates outfit recommendations using the user's wardrobe, and creates a shareable social-media-style fit card.
+
+The project demonstrates multi-tool orchestration, state management, error handling, and agent planning using a structured planning loop.
 
 ## What's Included
 
