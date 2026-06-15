@@ -41,6 +41,28 @@ flowchart TD
 
 ---
 
+## Repository Structure
+
+```text
+fitfindr/
+├── app.py                 # Gradio user interface
+├── agent.py               # Planning loop and session state management
+├── tools.py               # Tool implementations
+├── tests/
+│   └── test_tools.py      # Pytest test suite
+├── data/
+│   ├── listings.json      # Mock secondhand listings dataset
+│   └── wardrobe_schema.json
+├── utils/
+│   └── data_loader.py     # Dataset loading helpers
+├── planning.md            # Agent specification and design
+├── CLAUDE.md              # Claude Code project instructions
+├── requirements.txt
+└── README.md
+```
+
+---
+
 ## Tool Inventory
 
 ### 1. search_listings(description, size, max_price)
