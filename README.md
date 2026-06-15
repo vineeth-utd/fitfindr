@@ -41,6 +41,57 @@ flowchart TD
 
 ---
 
+## Tool Inventory
+
+### 1. search_listings(description, size, max_price)
+
+**Purpose:**
+Retrieves and ranks secondhand clothing listings from the marketplace dataset based on the user's search criteria, budget, and size preferences.
+
+**Inputs:**
+
+* `description (str)` – keywords describing the item the user wants to find
+* `size (str | None)` – optional size filter
+* `max_price (float | None)` – optional maximum budget
+
+**Output:**
+
+* `list[dict]` – matching listings sorted by relevance score. Each listing contains fields such as `id`, `title`, `description`, `category`, `style_tags`, `size`, `condition`, `price`, `colors`, `brand`, and `platform`.
+
+---
+
+### 2. suggest_outfit(new_item, wardrobe)
+
+**Purpose:**
+Uses an LLM to generate personalized outfit recommendations by combining a selected thrifted item with pieces already present in the user's wardrobe.
+
+**Inputs:**
+
+* `new_item (dict)` – the selected listing returned by `search_listings()`
+* `wardrobe (dict)` – the user's wardrobe in the format defined by `wardrobe_schema.json`
+
+**Output:**
+
+* `str` – one or more outfit recommendations. When wardrobe items are available, the response references specific pieces by name. If the wardrobe is empty, the tool returns general styling advice for the selected item.
+
+---
+
+### 3. create_fit_card(outfit, new_item)
+
+**Purpose:**
+Uses an LLM to transform an outfit recommendation into a concise social-media-style caption suitable for sharing a completed look.
+
+**Inputs:**
+
+* `outfit (str)` – the outfit recommendation returned by `suggest_outfit()`
+* `new_item (dict)` – the selected listing returned by `search_listings()`
+
+**Output:**
+
+* `str` – a 2–4 sentence Instagram/TikTok-style fit card that highlights the thrifted item, reflects the outfit vibe, and naturally incorporates the item name, price, and platform.
+
+---
+
 ## What's Included
 
 ```
@@ -90,11 +141,3 @@ Load an example wardrobe with:
 from utils.data_loader import get_example_wardrobe
 wardrobe = get_example_wardrobe()
 ```
-
-## Where to Start
-
-1. **Read `planning.md` and fill it out before writing any code.**
-2. Verify the data loads correctly by running `python utils/data_loader.py`.
-3. Build and test each tool individually before connecting them through your planning loop.
-
-Your implementation files go in this same directory. There's no required file structure for your agent code — organize it however makes sense for your design.
