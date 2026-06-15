@@ -200,3 +200,52 @@ Unable to create a fit card because no outfit suggestion was generated.
 ```
 
 This prevents the application from crashing and clearly explains what went wrong.
+
+---
+
+## Setup and Running the Project
+
+### Install dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+### Configure Groq
+
+Create a `.env` file in the project root:
+
+```env
+GROQ_API_KEY=your_key_here
+```
+
+### Run the application
+
+```bash
+python app.py
+```
+
+Open the URL displayed in the terminal (typically `http://localhost:7860`) and submit a query through the Gradio interface.
+
+### Example Queries
+
+FitFindr supports two wardrobe modes:
+
+* **Example wardrobe** – uses a predefined wardrobe containing tops, bottoms, shoes, outerwear, and accessories.
+* **Empty wardrobe (new user)** – simulates a new user who has not added any wardrobe items yet.
+
+#### Example wardrobe
+
+* `vintage graphic tee under $30`
+* `90s track jacket in size M`
+* `flowy midi skirt under $40`
+* `black combat boots size 8`
+
+#### Empty wardrobe (new user)
+
+* `vintage graphic tee under $50`
+* `y2k baby tee under $25`
+
+#### Failure-mode test
+
+* `designer ballgown size XXS under $5`
