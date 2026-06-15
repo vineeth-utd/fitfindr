@@ -249,3 +249,49 @@ FitFindr supports two wardrobe modes:
 #### Failure-mode test
 
 * `designer ballgown size XXS under $5`
+
+---
+
+## Spec Reflection
+
+### How the Spec Helped
+
+The planning process made implementation significantly easier by forcing the tool interfaces, planning loop, state management, and error handling behavior to be defined before writing code. Because the expected inputs, outputs, and failure modes were documented in advance, each tool could be implemented and tested independently before being connected through the agent.
+
+### One Way Implementation Diverged from the Spec
+
+The planning loop originally described extracting a description, size, and budget from the user query. During implementation, the description field was simplified by using the raw query string directly as the search description while still extracting size and budget separately using regular expressions. This reduced complexity, avoided an unnecessary LLM call for parsing, and worked well with the keyword-overlap ranking used by `search_listings()`.
+
+---
+
+## AI Usage
+
+### Instance 1
+
+* **What I gave the AI:**
+
+  I used Claude Code to implement the three required tools: `search_listings()`, `suggest_outfit()`, and `create_fit_card()`. For each tool, I first completed the corresponding specification in `planning.md`, including the tool purpose, inputs, outputs, failure modes, and error-handling behavior. I then provided Claude Code with the relevant tool specification from `planning.md`, the corresponding section of `tools.py`, and the helper functions available in `utils/data_loader.py`.
+
+* **What it produced:**
+
+  Claude Code generated implementation plans and then produced the tool implementations. This included keyword-based listing retrieval and ranking for `search_listings()`, LLM-powered outfit generation for `suggest_outfit()`, and social-media-style fit card generation for `create_fit_card()`. Claude also generated the pytest test suite used to validate the tools and their failure modes.
+
+* **What I changed or overrode:**
+
+  I reviewed each implementation plan before allowing any code changes. Rather than generating the entire agent at once, I implemented and validated the project incrementally. I first completed and tested `search_listings()`, then moved to `suggest_outfit()`, followed by `create_fit_card()`, and only after all three tools worked independently did I implement the planning loop. For each step, I reviewed the generated code, verified the behavior against the specification in `planning.md`, tested both normal and failure scenarios, and confirmed I understood the implementation before proceeding to the next milestone.
+
+  For `suggest_outfit()`, I requested revisions to the prompt design so that the tool used all important listing and wardrobe fields, handled empty wardrobes more explicitly, and included a dedicated fashion stylist system prompt. For `create_fit_card()`, I revised the prompt design to use a social-media-caption-writing role rather than a generic text-generation role and ensured that the generated captions behaved like Instagram/TikTok outfit posts rather than product descriptions.
+
+### Instance 2
+
+* **What I gave the AI:**
+
+  I used Claude Code to implement the planning loop in `agent.py`. I provided the Planning Loop, State Management, and Architecture sections from `planning.md`, along with the existing `agent.py` structure and session dictionary design. I also used ChatGPT throughout the project to review design decisions, evaluate planning-loop behavior, and validate state-management choices
+
+* **What it produced:**
+
+  Claude Code generated an implementation plan and then implemented `run_agent()` using the documented workflow. It also implemented the UI integration in `handle_query()` by connecting the Gradio interface to the planning loop and mapping the session state to the output panels. ChatGPT provided feedback on the planning loop, state management approach, prompt design, and error handling strategy.
+
+* **What I changed or overrode:**
+
+  I reviewed the generated planning-loop design before implementation and verified that it matched the documented specification. I chose to use a deterministic parsing approach with regular expressions instead of introducing an additional LLM call to extract query parameters. I also verified that the agent stopped early when `search_listings()` returned no results and that state flowed correctly between tools through the session dictionary before integrating the workflow into the Gradio interface.
