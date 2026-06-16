@@ -69,9 +69,16 @@ def run_agent(query: str, wardrobe: dict) -> dict:
 
     # Step 2: Parse query
     size_match = re.search(r'\bsize\s*(\S+)', query, re.IGNORECASE)
-    size = size_match.group(1) if size_match else None
+    if size_match:
+        size = size_match.group(1)
+    else:
+        word_size_map = {"small": "S", "medium": "M", "large": "L"}
+        word_match = re.search(r'\b(small|medium|large)\b', query, re.IGNORECASE)
+        size = word_size_map[word_match.group(1).lower()] if word_match else None
 
     price_match = re.search(r'under\s+\$?(\d+(?:\.\d+)?)', query, re.IGNORECASE)
+    if not price_match:
+        price_match = re.search(r'budget\s+\$?(\d+(?:\.\d+)?)', query, re.IGNORECASE)
     if not price_match:
         price_match = re.search(r'\$(\d+(?:\.\d+)?)', query)
     max_price = float(price_match.group(1)) if price_match else None

@@ -49,7 +49,8 @@ fitfindr/
 ├── agent.py               # Planning loop and session state management
 ├── tools.py               # Tool implementations
 ├── tests/
-│   └── test_tools.py      # Pytest test suite
+│   ├── test_tools.py      # Tool-level unit tests
+│   └── test_agent.py      # Planning loop and integration tests
 ├── data/
 │   ├── listings.json      # Mock secondhand listings dataset
 │   └── wardrobe_schema.json
@@ -91,6 +92,21 @@ The screenshot below shows a successful end-to-end interaction where the agent r
 
 ---
 
+## Testing
+
+The project includes both unit and integration tests.
+
+* `tests/test_tools.py` validates the behavior of the three tools and their failure modes.
+* `tests/test_agent.py` validates the planning loop, state flow between tools, query parsing, and early-exit behavior when no results are found.
+
+Run the full test suite with:
+
+```bash
+python -m pytest tests/ -v
+```
+
+---
+
 ## Setup and Running the Project
 
 ### Install dependencies
@@ -128,6 +144,8 @@ FitFindr supports two wardrobe modes:
 * `90s track jacket in size M`
 * `flowy midi skirt under $40`
 * `black combat boots size 8`
+* `casual shirt medium under $40`
+* `vintage jacket budget $50`
 
 #### Empty wardrobe (new user)
 
@@ -311,6 +329,8 @@ The planning process made implementation significantly easier by forcing the too
 ### One Way Implementation Diverged from the Spec
 
 The planning loop originally described extracting a description, size, and budget from the user query. During implementation, the description field was simplified by using the raw query string directly as the search description while still extracting size and budget separately using regular expressions. This reduced complexity, avoided an unnecessary LLM call for parsing, and worked well with the keyword-overlap ranking used by `search_listings()`.
+
+To make the parser more flexible, support was later added for common size words such as `small`, `medium`, and `large`, as well as budget phrases such as `budget $50`, while keeping the implementation deterministic and lightweight.
 
 ---
 
