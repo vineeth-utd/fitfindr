@@ -100,6 +100,62 @@ def test_query_with_no_price_sets_max_price_none(fake_item, fake_wardrobe):
     assert session["parsed"]["max_price"] is None
 
 
+# ── Parsing: word-form size and budget phrase ─────────────────────────────────
+
+def test_size_word_small_normalizes_to_S(fake_item, fake_wardrobe):
+    with patch("agent.search_listings", return_value=[fake_item]), \
+         patch("agent.suggest_outfit", return_value="Great look."), \
+         patch("agent.create_fit_card", return_value="Fit card."):
+        session = run_agent("casual shirt small under $40", fake_wardrobe)
+
+    assert session["parsed"]["size"] == "S"
+
+
+def test_size_word_medium_normalizes_to_M(fake_item, fake_wardrobe):
+    with patch("agent.search_listings", return_value=[fake_item]), \
+         patch("agent.suggest_outfit", return_value="Great look."), \
+         patch("agent.create_fit_card", return_value="Fit card."):
+        session = run_agent("casual shirt medium under $40", fake_wardrobe)
+
+    assert session["parsed"]["size"] == "M"
+
+
+def test_size_word_large_normalizes_to_L(fake_item, fake_wardrobe):
+    with patch("agent.search_listings", return_value=[fake_item]), \
+         patch("agent.suggest_outfit", return_value="Great look."), \
+         patch("agent.create_fit_card", return_value="Fit card."):
+        session = run_agent("casual shirt large under $40", fake_wardrobe)
+
+    assert session["parsed"]["size"] == "L"
+
+
+def test_explicit_size_keyword_takes_precedence(fake_item, fake_wardrobe):
+    with patch("agent.search_listings", return_value=[fake_item]), \
+         patch("agent.suggest_outfit", return_value="Great look."), \
+         patch("agent.create_fit_card", return_value="Fit card."):
+        session = run_agent("casual shirt size S medium", fake_wardrobe)
+
+    assert session["parsed"]["size"] == "S"
+
+
+def test_budget_phrase_extracts_price(fake_item, fake_wardrobe):
+    with patch("agent.search_listings", return_value=[fake_item]), \
+         patch("agent.suggest_outfit", return_value="Great look."), \
+         patch("agent.create_fit_card", return_value="Fit card."):
+        session = run_agent("vintage jacket budget $50", fake_wardrobe)
+
+    assert session["parsed"]["max_price"] == 50.0
+
+
+def test_budget_phrase_without_dollar_sign(fake_item, fake_wardrobe):
+    with patch("agent.search_listings", return_value=[fake_item]), \
+         patch("agent.suggest_outfit", return_value="Great look."), \
+         patch("agent.create_fit_card", return_value="Fit card."):
+        session = run_agent("vintage jacket budget 50", fake_wardrobe)
+
+    assert session["parsed"]["max_price"] == 50.0
+
+
 # ── Live smoke test (requires GROQ_API_KEY) ───────────────────────────────────
 
 @pytest.mark.skipif(
