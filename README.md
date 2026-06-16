@@ -92,21 +92,6 @@ The screenshot below shows a successful end-to-end interaction where the agent r
 
 ---
 
-## Testing
-
-The project includes both unit and integration tests.
-
-* `tests/test_tools.py` validates the behavior of the three tools and their failure modes.
-* `tests/test_agent.py` validates the planning loop, state flow between tools, query parsing, and early-exit behavior when no results are found.
-
-Run the full test suite with:
-
-```bash
-python -m pytest tests/ -v
-```
-
----
-
 ## Setup and Running the Project
 
 ### Install dependencies
@@ -155,6 +140,21 @@ FitFindr supports two wardrobe modes:
 #### Failure-mode test
 
 * `designer ballgown size XXS under $5`
+
+---
+
+## Testing
+
+The project includes both unit and integration tests.
+
+* `tests/test_tools.py` validates the behavior of the three tools and their failure modes.
+* `tests/test_agent.py` validates the planning loop, state flow between tools, query parsing, and early-exit behavior when no results are found.
+
+Run the full test suite with:
+
+```bash
+python -m pytest tests/ -v
+```
 
 ---
 
